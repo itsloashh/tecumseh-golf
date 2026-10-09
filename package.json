@@ -1,0 +1,32 @@
+{
+  "name": "tecumseh-golf",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tecumseh Golf Centre — pro shop, heated range, fittings & repairs",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.2.0",
+    "@fontsource-variable/inter-tight": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
+    "motion": "^14.0.0",
+    "next": "^16.3.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "stripe": "^18.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.0"
+  }
+}
