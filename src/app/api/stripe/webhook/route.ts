@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
-import { supabaseService } from "@/lib/data/supabase";
-import { orderBy } from "@/lib/orders";
+import { mapSettings, supabaseService } from "@/lib/data/supabase";
+import { alertLowStock, orderBy } from "@/lib/orders";
 import { emailNewOrder } from "@/lib/notify";
 
 export const runtime = "nodejs";
@@ -34,7 +34,12 @@ export async function POST(req: Request) {
       .select("id");
     if (data?.length) {
       const order = await orderBy(db, "id", data[0].id);
-      if (order) await emailNewOrder(order);
+      const { data: s } = await db.from("store_settings").select("*").eq("id", 1).maybeSingle();
+      const n = mapSettings(s).notifications;
+      if (order) {
+        await emailNewOrder(order, n);
+        await alertLowStock(db, order.items.map((i) => i.productId).filter(Boolean) as string[], n);
+      }
     }
   }
   if (event.type === "checkout.session.expired") {

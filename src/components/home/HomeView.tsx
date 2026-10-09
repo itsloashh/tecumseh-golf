@@ -17,7 +17,7 @@ export function HomeView() {
   const featured = [...products.filter((p) => p.featured), ...products.filter((p) => !p.featured)].slice(0, 8);
   const used = products.filter((p) => p.condition === "used" && (p.stock == null || p.stock > 0));
   const bookable = services.filter((v) => v.bookable);
-  const range = services.find((v) => v.slug === "range");
+  const show = s.homeSections;
   const tel = s.phone.replace(/[^0-9+]/g, "");
 
   return (
@@ -66,11 +66,11 @@ export function HomeView() {
 
       {/* ── Quick tiles ─────────────────────────────────────── */}
       <section className="relative z-10 mx-auto -mt-6 max-w-7xl px-4 sm:px-6">
-        <div className="rail -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0">
+        <div className="rail -mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0">
           {[
             { href: "/shop", k: "Pro shop", t: "Clubs, balls & gear", cat: "clubs" },
-            { href: "/services#range", k: "All winter", t: "Heated range bays", cat: "balls" },
             { href: "/book?service=fitting", k: "Dial it in", t: "Club fitting", cat: "putters" },
+            { href: "/book?service=lessons", k: "Get better", t: "Golf lessons", cat: "balls" },
             { href: "/book?service=repairs", k: "Like new", t: "Repairs & regrips", cat: "gloves" },
           ].map((x, i) => (
             <Link key={x.href} href={x.href} className="card group relative flex min-w-[72%] snap-start items-center gap-3 overflow-hidden p-3 shadow-[0_10px_30px_-18px_rgba(13,59,36,0.45)] transition-transform hover:-translate-y-0.5 sm:min-w-0">
@@ -86,17 +86,17 @@ export function HomeView() {
       </section>
 
       {/* ── Featured ───────────────────────────────────────── */}
-      <section className="mx-auto mt-16 max-w-7xl px-4 sm:px-6">
+      {show.featured && <section className="mx-auto mt-16 max-w-7xl px-4 sm:px-6">
         <motion.div {...rise}>
           <SectionHead kicker="In the shop now" title="Fresh on the rack" action={<Link href="/shop" className="btn btn-ghost btn-sm">Shop all <IconArrow size={16} /></Link>} />
         </motion.div>
         <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
           {featured.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
         </div>
-      </section>
+      </section>}
 
       {/* ── Categories ─────────────────────────────────────── */}
-      <section className="mx-auto mt-16 max-w-7xl px-4 sm:px-6">
+      {show.categories && <section className="mx-auto mt-16 max-w-7xl px-4 sm:px-6">
         <motion.div {...rise}><SectionHead kicker="Browse" title="Shop by category" /></motion.div>
         <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           {categories.map((c) => {
@@ -110,47 +110,27 @@ export function HomeView() {
             );
           })}
         </div>
-      </section>
+      </section>}
 
-      {/* ── Range scorecard ────────────────────────────────── */}
-      <section id="range" className="mt-20 bg-fairway text-cream">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center">
-          <motion.div {...rise}>
-            <SectionHead dark kicker="The range" title={<>Swing all winter.<br /><span className="text-flag">Heated bays.</span></>} />
-            <p className="mt-5 max-w-md text-[16px] leading-relaxed text-cream/80">{range?.summary}</p>
-            {s.rangeNote && <p className="mt-3 max-w-md text-[14px] text-cream/60">{s.rangeNote}</p>}
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/services#range" className="btn btn-flag">Range details</Link>
-              {tel && <a href={`tel:${tel}`} className="btn btn-ghost-dark"><IconPhone size={18} /> Call the shop</a>}
-            </div>
-          </motion.div>
-          <motion.div {...rise}><Scorecard /></motion.div>
-        </div>
-      </section>
-
-      {/* ── Services ───────────────────────────────────────── */}
-      <section className="mx-auto mt-20 max-w-7xl px-4 sm:px-6">
-        <motion.div {...rise}><SectionHead kicker="Book with the pros" title="Fitting, lessons & repairs" /></motion.div>
-        <div className="mt-7 grid gap-4 md:grid-cols-3">
-          {bookable.map((v, i) => (
-            <motion.div key={v.id} {...rise} transition={{ ...rise.transition, delay: i * 0.06 }} className="card flex flex-col p-6">
-              <p className="label text-green">0{i + 1}</p>
-              <h3 className="display mt-3 text-[2rem]">{v.title}</h3>
-              <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-muted">{v.summary}</p>
-              <ul className="mt-4 space-y-1.5 text-[13.5px]">
-                {v.details.slice(0, 3).map((d) => <li key={d} className="flex gap-2"><span className="mt-[7px] size-1.5 shrink-0 rounded-full bg-flag-deep" />{d}</li>)}
-              </ul>
-              <div className="mt-6 flex items-center justify-between gap-3">
-                {v.priceLabel ? <span className="price text-[1.1rem]">{v.priceLabel}</span> : <span className="text-[13px] text-faint">Ask for pricing</span>}
-                <Link href={`/book?service=${v.slug}`} className="btn btn-green btn-sm"><IconCal size={17} /> Request</Link>
+      {/* ── Workshop ───────────────────────────────────────── */}
+      {show.workshop && bookable.length > 0 && (
+        <section id="workshop" className="mt-20 bg-fairway text-cream">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center">
+            <motion.div {...rise}>
+              <SectionHead dark kicker="The workshop" title={<>Regrip. Re-shaft.<br /><span className="text-flag">Dial it in.</span></>} />
+              <p className="mt-5 max-w-md text-[16px] leading-relaxed text-cream/80">Book a fitting or a lesson, or drop your clubs off for new grips and shafts. Tell us what you need and we'll call to set a time.</p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link href="/book" className="btn btn-flag"><IconCal size={18} /> Request a time</Link>
+                {tel && <a href={`tel:${tel}`} className="btn btn-ghost-dark"><IconPhone size={18} /> Call the shop</a>}
               </div>
             </motion.div>
-          ))}
-        </div>
-      </section>
+            <motion.div {...rise}><WorkshopCard /></motion.div>
+          </div>
+        </section>
+      )}
 
       {/* ── Pre-owned ──────────────────────────────────────── */}
-      {used.length > 0 && (
+      {show.preowned && used.length > 0 && (
         <section className="mx-auto mt-20 max-w-7xl px-4 sm:px-6">
           <div className="dimples-soft overflow-hidden rounded-3xl border border-[var(--line)] bg-sand/60 p-6 sm:p-10">
             <SectionHead kicker="One of a kind" title="Pre-owned clubs" action={<Link href="/shop?condition=used" className="btn btn-ghost btn-sm">See all used <IconArrow size={16} /></Link>} />
@@ -163,7 +143,7 @@ export function HomeView() {
       )}
 
       {/* ── Visit ──────────────────────────────────────────── */}
-      <section className="mx-auto mt-20 max-w-7xl px-4 sm:px-6">
+      {show.visit && <section className="mx-auto mt-20 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
           <motion.div {...rise} className="card p-6 sm:p-8">
             <p className="label text-green">Come see us</p>
@@ -180,7 +160,7 @@ export function HomeView() {
             <MapEmbed />
           </motion.div>
         </div>
-      </section>
+      </section>}
     </>
   );
 }
@@ -202,36 +182,31 @@ function YardageMarker({ className }: { className?: string }) {
   );
 }
 
-export function Scorecard() {
+/** Scorecard-style list of bookable services and their prices. */
+export function WorkshopCard() {
   const { snapshot } = useStore();
-  const rows = snapshot.settings.rangePrices;
+  const rows = snapshot.services.filter((v) => v.bookable);
   return (
     <div className="overflow-hidden rounded-2xl bg-paper text-ink shadow-2xl shadow-black/30">
       <div className="flex items-center justify-between bg-green px-5 py-3 text-cream">
-        <span className="label !text-[11px]">Range card</span>
-        <span className="label !text-[11px] text-flag">No booking needed</span>
+        <span className="label !text-[11px]">Workshop card</span>
+        <span className="label !text-[11px] text-flag">Book online</span>
       </div>
-      <table className="w-full text-left">
-        <thead>
-          <tr className="label border-b-2 border-ink/80 !text-[10px] text-muted">
-            <th className="px-5 py-2.5 font-medium">Hole</th>
-            <th className="py-2.5 font-medium">Bucket</th>
-            <th className="px-5 py-2.5 text-right font-medium">Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i} className="border-b border-dashed border-[var(--line-strong)] last:border-0">
-              <td className="px-5 py-4"><span className="grid size-8 place-items-center rounded-full border-2 border-green font-mono text-[13px] font-semibold text-green">{i + 1}</span></td>
-              <td className="py-4">
-                <p className="display text-[1.45rem] leading-none">{r.label}</p>
-                {r.detail && <p className="mt-1 text-[12.5px] text-muted">{r.detail}</p>}
-              </td>
-              <td className="px-5 py-4 text-right">{r.price ? <span className="price text-[1.4rem]">{r.price}</span> : <span className="text-[12.5px] text-faint">Ask at counter</span>}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ul>
+        {rows.map((r, i) => (
+          <li key={r.id} className="border-b border-dashed border-[var(--line-strong)] last:border-0">
+            <Link href={`/book?service=${r.slug}`} className="group flex items-center gap-4 px-5 py-4 hover:bg-leaf/50">
+              <span className="grid size-8 shrink-0 place-items-center rounded-full border-2 border-green font-mono text-[13px] font-semibold text-green">{i + 1}</span>
+              <span className="min-w-0 flex-1">
+                <span className="display block text-[1.45rem] leading-none">{r.title}</span>
+                {r.details[0] && <span className="mt-1 block truncate text-[12.5px] text-muted">{r.details[0]}</span>}
+              </span>
+              {r.priceLabel ? <span className="price shrink-0 text-[1.2rem]">{r.priceLabel}</span> : <span className="shrink-0 text-[12.5px] text-faint">Ask for pricing</span>}
+              <IconArrow size={16} className="shrink-0 text-faint transition-transform group-hover:translate-x-0.5 group-hover:text-green" />
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

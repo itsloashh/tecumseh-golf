@@ -15,7 +15,19 @@ export interface DayHours {
   closed: boolean;
 }
 
-export interface RangePrice { label: string; detail: string; price: string }
+export interface HomeSections { featured: boolean; categories: boolean; workshop: boolean; preowned: boolean; visit: boolean }
+
+export interface NotificationSettings {
+  /** Who gets staff alerts (falls back to the NOTIFY_TO env var when empty) */
+  recipients: string[];
+  newOrder: boolean;
+  newBooking: boolean;
+  lowStock: boolean;
+  /** Alert when an order leaves a product at or below this many */
+  lowStockAt: number;
+  customerReceipt: boolean;
+  customerReady: boolean;
+}
 export interface Social { label: string; href: string }
 
 export interface StoreSettings {
@@ -35,8 +47,8 @@ export interface StoreSettings {
   heroTitle: string;
   heroSub: string;
   about: string[];
-  rangePrices: RangePrice[];
-  rangeNote: string;
+  homeSections: HomeSections;
+  notifications: NotificationSettings;
   googleRating: number | null;
   googleReviews: number | null;
   googleUrl: string;

@@ -82,7 +82,7 @@ git push -u origin main
 | `NEXT_PUBLIC_SUPABASE_URL` | Project URL from Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `anon` `public` key |
 | `SUPABASE_SERVICE_ROLE_KEY` | `service_role` key (secret) |
-| `ADMIN_EMAILS` | the email you created in step 3.4 |
+| `ADMIN_EMAILS` | the email you created in step 3.4 (this is the owner/manager login) |
 | `NEXT_PUBLIC_SITE_URL` | `https://tecumseh-golf.vercel.app` (change to `https://tecumsehgolf.com` once the domain is connected) |
 
 3. Click **Deploy**.
@@ -103,15 +103,17 @@ Supabase → **Authentication → URL Configuration**:
 ## 6. Sign in to the dashboard
 
 Go to `/admin` on the live site and sign in with the email + password from step 3.4.
-The **Home** screen has a "Before launch" checklist — work through it (hours, real products + photos, range prices).
+The **Home** screen has a "Before launch" checklist — work through it (hours, real products + photos, service prices).
+Then open **Team & access** to add the shop's employees and tick what each one can use.
 
 ---
 
 ## Later (optional)
 
-**Email alerts** (new orders + bookings to the shop, receipts + "ready for pickup" to customers): make a free resend.com
-account, verify `tecumsehgolf.com`, then add Vercel env vars `RESEND_API_KEY`, `NOTIFY_TO` (shop inbox) and
-`NOTIFY_FROM` (e.g. `Tecumseh Golf <orders@tecumsehgolf.com>`), and redeploy.
+**Email alerts** (new orders, bookings and low stock to the shop; receipts + "ready for pickup" to customers): make a free
+resend.com account, verify `tecumsehgolf.com`, then add Vercel env vars `RESEND_API_KEY` and `NOTIFY_FROM`
+(e.g. `Tecumseh Golf <orders@tecumsehgolf.com>`) and redeploy. Who gets alerts, and which ones, is set in the dashboard
+under **Notifications**.
 
 **Card payments:** Stripe → Developers → Webhooks → Add endpoint `https://<site>/api/stripe/webhook` with events
 `checkout.session.completed` and `checkout.session.expired`. Add Vercel env vars `STRIPE_SECRET_KEY` and

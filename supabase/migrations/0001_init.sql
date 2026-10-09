@@ -28,8 +28,8 @@ create table store_settings (
   hero_title        text,
   hero_sub          text,
   about             text[] not null default '{}',
-  range_prices      jsonb not null default '[]'::jsonb,   -- [{label, detail, price}]
-  range_note        text,
+  home_sections     jsonb not null default '{"featured":true,"categories":true,"workshop":true,"preowned":true,"visit":true}'::jsonb,
+  notifications     jsonb not null default '{"recipients":[],"newOrder":true,"newBooking":true,"lowStock":true,"lowStockAt":2,"customerReceipt":true,"customerReady":true}'::jsonb,
   google_rating     numeric(2,1),
   google_reviews    int,
   google_url        text,
@@ -70,7 +70,7 @@ create table products (
 create index on products (published, sort_order desc);
 create index on products (category);
 
--- ── Services: range, fitting, lessons, repairs ───────────────────
+-- ── Services: fitting, lessons, repairs ──────────────────────────
 create table services (
   id            uuid primary key default gen_random_uuid(),
   slug          text unique not null,
@@ -159,10 +159,33 @@ create table service_requests (
 );
 create index on service_requests (status, created_at desc);
 
--- ── Admins ───────────────────────────────────────────────────────
-create table admins (
-  user_id uuid primary key references auth.users(id) on delete cascade
+-- ── Staff: the manager account(s) + employees ────────────────────
+-- role 'manager' can do everything, including managing staff.
+-- role 'staff' gets only the permissions listed (see src/lib/admin/permissions.ts):
+--   orders, products, prices, stock, bookings, customers, content, notifications
+-- Emails in the ADMIN_EMAILS env var are always managers (the owner's way in).
+create table staff (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid unique references auth.users(id) on delete cascade,
+  email         text unique not null,
+  name          text,
+  role          text not null default 'staff' check (role in ('manager', 'staff')),
+  permissions   text[] not null default '{orders,stock,bookings}',
+  active        boolean not null default true,
+  created_at    timestamptz not null default now(),
+  last_seen_at  timestamptz
 );
+
+-- ── Activity log: who changed what (managers see this) ───────────
+create table activity_log (
+  id          bigint generated always as identity primary key,
+  at          timestamptz not null default now(),
+  actor_email text,
+  actor_name  text,
+  action      text not null,
+  detail      text
+);
+create index on activity_log (at desc);
 
 -- ── updated_at ───────────────────────────────────────────────────
 create or replace function touch_updated_at() returns trigger language plpgsql as $$
@@ -242,7 +265,8 @@ alter table customers        enable row level security;
 alter table orders           enable row level security;
 alter table order_items      enable row level security;
 alter table service_requests enable row level security;
-alter table admins           enable row level security;
+alter table staff            enable row level security;
+alter table activity_log     enable row level security;
 
 create policy "public read settings"   on store_settings for select using (true);
 create policy "public read categories" on categories     for select using (true);
@@ -256,7 +280,7 @@ create policy "own orders read"     on orders    for select using (auth.uid() = 
 create policy "own order items"     on order_items for select using (
   exists (select 1 from orders o where o.id = order_id and o.customer_id = auth.uid())
 );
--- service_requests, admins: no public policies → service role only.
+-- service_requests, staff, activity_log: no public policies → service role only.
 
 -- ════════════════ Storage ════════════════
 insert into storage.buckets (id, name, public) values ('shop', 'shop', true) on conflict (id) do nothing;

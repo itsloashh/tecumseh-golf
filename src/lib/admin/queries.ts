@@ -4,11 +4,14 @@ import type { Category, Customer, Order, Product, Service, ServiceRequest, Store
 import { mapCategory, mapCustomer, mapOrder, mapProduct, mapRequest, mapService, mapSettings, stripeConfigured, supabaseService } from "@/lib/data/supabase";
 import { ORDER_SELECT } from "@/lib/orders";
 import * as sample from "@/lib/data/sample";
-import { demoMode } from "./session";
+import { demoMode, ownerEmails } from "./session";
+import { ALL_PERMISSIONS, cleanPermissions, type Permission, type Role } from "./permissions";
 
 export type AdminProduct = Product & { published: boolean };
 export type AdminService = Service & { published: boolean };
 export type AdminCustomer = Customer & { orders: number; spentCents: number; lastOrder: string | null };
+export interface TeamMember { id: string; userId: string | null; email: string; name: string; role: Role; permissions: Permission[]; active: boolean; owner: boolean; createdAt: string; lastSeenAt: string | null }
+export interface ActivityEntry { id: number; at: string; actorEmail: string; actorName: string; action: string; detail: string }
 
 export interface AdminData {
   settings: StoreSettings;
@@ -18,6 +21,8 @@ export interface AdminData {
   orders: Order[];
   requests: ServiceRequest[];
   customers: AdminCustomer[];
+  team: TeamMember[];
+  activity: ActivityEntry[];
   stripeReady: boolean;
   emailReady: boolean;
   demo: boolean;
@@ -46,6 +51,16 @@ function demoData(): AdminData {
       { id: "r2", createdAt: hoursAgo(30), status: "scheduled", serviceSlug: "repairs", serviceTitle: "Repairs & regripping", preferredDate: null, preferredTime: "Any time", name: "Sample Person", email: "sample@example.com", phone: null, details: "EXAMPLE REQUEST — regrip 7 irons, midsize.", internalNotes: "Dropping off Thursday" },
     ],
     customers: [{ id: "c1", email: "customer@example.com", name: "Example Customer", phone: "519-555-0100", marketing: true, createdAt: hoursAgo(200), orders: 2, spentCents: 9489, lastOrder: hoursAgo(1) }],
+    team: [
+      { id: "s1", userId: "demo", email: "owner@example.com", name: "Demo Manager", role: "manager", permissions: [...ALL_PERMISSIONS], active: true, owner: true, createdAt: hoursAgo(400), lastSeenAt: hoursAgo(0.1) },
+      { id: "s2", userId: "u2", email: "counter@example.com", name: "Example Employee", role: "staff", permissions: ["orders", "stock", "bookings"], active: true, owner: false, createdAt: hoursAgo(300), lastSeenAt: hoursAgo(5) },
+      { id: "s3", userId: "u3", email: "lead@example.com", name: "Example Shop Lead", role: "staff", permissions: ["orders", "products", "prices", "stock", "bookings", "customers"], active: true, owner: false, createdAt: hoursAgo(250), lastSeenAt: hoursAgo(30) },
+    ],
+    activity: [
+      { id: 3, at: hoursAgo(0.5), actorEmail: "counter@example.com", actorName: "Example Employee", action: "Order #1002 → ready for pickup", detail: "" },
+      { id: 2, at: hoursAgo(4), actorEmail: "lead@example.com", actorName: "Example Shop Lead", action: "Edited product “Soft Feel Golf Balls — Dozen”", detail: "on sale (was $34.99)" },
+      { id: 1, at: hoursAgo(28), actorEmail: "counter@example.com", actorName: "Example Employee", action: "Stock: “Cart Bag”", detail: "3 → 2" },
+    ],
     stripeReady: false,
     emailReady: false,
     demo: true,
@@ -57,7 +72,7 @@ async function load(): Promise<AdminData> {
   if (demoMode()) return demoData();
   const db = supabaseService();
   if (!db) throw new Error("SUPABASE_SERVICE_ROLE_KEY is missing.");
-  const [s, c, p, v, o, r, cu] = await Promise.all([
+  const [s, c, p, v, o, r, cu, st, ac] = await Promise.all([
     db.from("store_settings").select("*").eq("id", 1).maybeSingle(),
     db.from("categories").select("*").order("sort_order"),
     db.from("products").select("*").order("sort_order", { ascending: false }),
@@ -65,8 +80,17 @@ async function load(): Promise<AdminData> {
     db.from("orders").select(ORDER_SELECT).order("created_at", { ascending: false }).limit(300),
     db.from("service_requests").select("*").order("created_at", { ascending: false }).limit(200),
     db.from("customers").select("*").order("created_at", { ascending: false }).limit(1000),
+    db.from("staff").select("*").order("created_at"),
+    db.from("activity_log").select("*").order("at", { ascending: false }).limit(300),
   ]);
-  for (const x of [s, c, p, v, o, r, cu]) if (x.error) throw x.error;
+  for (const x of [s, c, p, v, o, r, cu, st, ac]) if (x.error) throw x.error;
+  const owners = ownerEmails();
+  const team: TeamMember[] = (st.data ?? []).map((x: any) => ({
+    id: x.id, userId: x.user_id, email: x.email, name: x.name ?? "", role: x.role === "manager" || owners.includes(x.email) ? "manager" : "staff",
+    permissions: x.role === "manager" ? [...ALL_PERMISSIONS] : cleanPermissions(x.permissions ?? []), active: !!x.active || owners.includes(x.email),
+    owner: owners.includes(x.email), createdAt: x.created_at, lastSeenAt: x.last_seen_at,
+  }));
+  const staffEmails = new Set(team.map((t) => t.email));
 
   const orders = (o.data ?? []).map(mapOrder);
   const stats = new Map<string, { n: number; spent: number; last: string }>();
@@ -83,12 +107,14 @@ async function load(): Promise<AdminData> {
     services: (v.data ?? []).map((x: any) => ({ ...mapService(x), published: !!x.published })),
     orders,
     requests: (r.data ?? []).map(mapRequest),
-    customers: (cu.data ?? []).map((x: any) => {
+    team,
+    activity: (ac.data ?? []).map((x: any) => ({ id: x.id, at: x.at, actorEmail: x.actor_email ?? "", actorName: x.actor_name ?? "", action: x.action, detail: x.detail ?? "" })),
+    customers: (cu.data ?? []).filter((x: any) => !staffEmails.has((x.email ?? "").toLowerCase())).map((x: any) => {
       const st = stats.get(x.id);
       return { ...mapCustomer(x), orders: st?.n ?? 0, spentCents: st?.spent ?? 0, lastOrder: st?.last ?? null };
     }),
     stripeReady: stripeConfigured() && !!process.env.STRIPE_WEBHOOK_SECRET,
-    emailReady: !!process.env.RESEND_API_KEY && !!process.env.NOTIFY_TO,
+    emailReady: !!process.env.RESEND_API_KEY,
     demo: false,
   };
 }

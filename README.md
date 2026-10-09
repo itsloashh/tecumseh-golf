@@ -1,4 +1,4 @@
-# Tecumseh Golf — pro shop, range & services
+# Tecumseh Golf — pro shop, fitting, lessons & repairs
 
 Next.js 16 · React 19 · TypeScript · Tailwind v4 · Motion · Supabase (auth + database + storage) · Stripe (optional) · Vercel
 
@@ -37,6 +37,8 @@ supabase/
   migrations/0001_init.sql   Tables, RLS, place_order / cancel_order functions, storage bucket
   seed.sql                   Same content as sample.ts (regenerate: node scripts/gen-seed.mjs)
 public/brand/                Logo cut from the old "coming soon" page
+  (site)/layout.tsx + shell/Intro.tsx   Logo intro (pure CSS, once per visit)
+  shell/ViewMode.tsx         Auto · Phone · Desktop switch
 ```
 
 ## How the shop works
@@ -50,22 +52,36 @@ public/brand/                Logo cut from the old "coming soon" page
 
 ## Staff dashboard (/admin)
 
-Works on a phone. Every save goes live immediately (no redeploy).
+Works on a phone or a computer, with an **Auto · Phone · Desktop** layout switch (also in the site footer).
+Every save goes live immediately (no redeploy), and every change is recorded in the activity log.
 
-| Screen | What staff can do |
-|---|---|
-| **Home** | New orders, waiting for pickup, new booking requests, low stock, last-7-days sales, a "before launch" checklist |
-| **Orders** | Pickup queue by status, tap-to-call/email, mark Ready (emails the customer), Picked up, mark paid, cancel (restocks), staff notes |
-| **Products** | Add from the camera roll (up to 8 photos), price + "was" price (sale), stock with quick +/−, options (size, hand, flex…), new/pre-owned, feature on homepage, hide, move to front, categories |
-| **Bookings** | Fitting / lesson / repair requests: New → Contacted → Scheduled → Done, notes |
-| **Customers** | Accounts, order counts, lifetime spend, email opt-ins (copy the list) |
-| **Store** | Announcement bar, homepage headline, hours, range prices, services + prices, contact, Google rating, about text, tax rate, card payments on/off |
+**Accounts & access**
+- **Managers** see everything, manage the team and see the activity log. Emails in `ADMIN_EMAILS` are always managers (the owner's way in).
+- **Employees** are added by a manager on **Team & access** (name, email, temporary password) and only see the screens ticked for them:
+  Orders · Products · Prices & sales · Stock counts · Bookings · Customers · Website content · Notifications.
+  Presets: *Counter staff* (orders, stock, bookings), *Shop lead* (everything but content & alerts), *Everything*.
+- Permissions are enforced on the server for every save, not just hidden in the menu — e.g. someone with only
+  "Stock counts" can change stock on a product but their price edits are ignored.
+
+| Screen | Who | What it does |
+|---|---|---|
+| **Home** | everyone | Tiles for what they can access, latest orders, low stock; managers also get recent activity + launch checklist |
+| **Orders** | Orders | Pickup queue, tap-to-call/email, Ready (emails the customer), Picked up, mark paid, cancel (restocks), notes |
+| **Products** | Products / Prices / Stock | Photos from the camera roll, prices + sales, stock +/−, options, pre-owned, featured, hide, categories |
+| **Bookings** | Bookings | Fitting / lesson / repair requests: New → Contacted → Scheduled → Done |
+| **Customers** | Customers | Accounts, orders, spend, email opt-ins |
+| **Website content** | Content | Announcement bar, headline, homepage section on/off, hours, services + prices, contact, about, tax, card payments |
+| **Notifications** | Notifications | Who gets shop alerts; new order / booking / low-stock alerts; customer confirmation + ready-for-pickup emails; test email |
+| **Team & access** | Managers | Add employees, set role + permissions, reset passwords, deactivate, remove |
+| **Activity** | Managers | Who changed what and when, filterable by person, prices, stock, orders, team |
+| **My account** | everyone | Name, password, layout preference, what they have access to |
 
 ## ⚠ Replace before launch (all editable in /admin — the Home checklist tracks these)
 
 - [ ] **Hours** — taken from public listings (Mon–Fri 9–7, Sat 9–4, Sun 9–3). Confirm, then tick "These hours are correct".
 - [ ] **Products** — all 16 are samples ("Sample" tag). Edit or delete them; editing one clears its tag.
-- [ ] **Range bucket prices** and **service prices**
+- [ ] **Service prices** (fitting, lessons, repairs)
+- [ ] **Employees** — add them on Team & access
 - [ ] **About text** — a draft; rewrite in the shop's own words
 - [ ] **Logo** — cut from a ~450px screenshot. A vector/PNG export of the original mascot + wordmark will be sharper.
 - [ ] **Google rating** (4.5 · 161 reviews at build time) — update now and then

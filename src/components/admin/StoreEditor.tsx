@@ -32,7 +32,7 @@ export function StoreEditor({ settings, services, stripeReady }: { settings: Sto
 
   return (
     <>
-      <PageHead kicker="Settings" title="Store" sub="Everything here shows on the public site." />
+      <PageHead kicker="Website" title="Content" sub="Everything here shows on the public site as soon as you save." />
 
       <Section title="Homepage">
         <div className="space-y-4">
@@ -40,6 +40,20 @@ export function StoreEditor({ settings, services, stripeReady }: { settings: Sto
           {s.announcementOn && <Field label="Announcement"><TextInput value={s.announcement} onChange={(e) => up("announcement", e.target.value)} placeholder="Boxing Day sale — 20% off all bags" /></Field>}
           <Field label="Headline" hint="last word turns yellow"><TextInput value={s.heroTitle} onChange={(e) => up("heroTitle", e.target.value)} /></Field>
           <Field label="Intro"><TextArea value={s.heroSub} onChange={(e) => up("heroSub", e.target.value)} className="!min-h-20" /></Field>
+          <div>
+            <span className="mb-1.5 block text-[13.5px] font-semibold">Homepage sections <span className="font-normal text-faint">— turn off any you don't want shown</span></span>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {([
+                ["featured", "Featured products", "“Fresh on the rack”"],
+                ["categories", "Shop by category", "Category tiles"],
+                ["workshop", "Workshop", "Fitting, lessons & repairs card"],
+                ["preowned", "Pre-owned clubs", "Shows when used stock is in"],
+                ["visit", "Visit us", "Hours, address & map"],
+              ] as const).map(([k, label, sub]) => (
+                <Toggle key={k} checked={s.homeSections[k]} onChange={(v) => up("homeSections", { ...s.homeSections, [k]: v })} label={label} sub={sub} />
+              ))}
+            </div>
+          </div>
         </div>
       </Section>
 
@@ -65,21 +79,6 @@ export function StoreEditor({ settings, services, stripeReady }: { settings: Sto
         <div className="mt-3 space-y-3">
           <Field label="Note under the hours"><TextInput value={s.hoursNote} onChange={(e) => up("hoursNote", e.target.value)} placeholder="Range closes 30 min before the shop" /></Field>
           <Toggle checked={s.hoursConfirmed} onChange={(v) => up("hoursConfirmed", v)} label="These hours are correct" sub="Ticks it off the launch checklist" />
-        </div>
-      </Section>
-
-      <Section title="Range prices">
-        <div className="space-y-2">
-          {s.rangePrices.map((r, i) => (
-            <div key={i} className="card grid grid-cols-[1fr_1fr_6.5rem_auto] gap-2 p-2.5 max-sm:grid-cols-2">
-              <TextInput className="!h-10" value={r.label} placeholder="Large bucket" onChange={(e) => up("rangePrices", s.rangePrices.map((x, k) => (k === i ? { ...x, label: e.target.value } : x)))} />
-              <TextInput className="!h-10" value={r.detail} placeholder="~100 balls" onChange={(e) => up("rangePrices", s.rangePrices.map((x, k) => (k === i ? { ...x, detail: e.target.value } : x)))} />
-              <TextInput className="!h-10" value={r.price} placeholder="$15" onChange={(e) => up("rangePrices", s.rangePrices.map((x, k) => (k === i ? { ...x, price: e.target.value } : x)))} />
-              <button type="button" onClick={() => up("rangePrices", s.rangePrices.filter((_, k) => k !== i))} className="grid size-10 place-items-center rounded-xl text-muted hover:text-clay" aria-label="Remove row"><IconX size={16} /></button>
-            </div>
-          ))}
-          <button type="button" onClick={() => up("rangePrices", [...s.rangePrices, { label: "", detail: "", price: "" }])} className="btn btn-ghost btn-sm"><IconPlus size={16} /> Add row</button>
-          <Field label="Range note"><TextInput value={s.rangeNote} onChange={(e) => up("rangeNote", e.target.value)} /></Field>
         </div>
       </Section>
 

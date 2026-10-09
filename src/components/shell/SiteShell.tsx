@@ -7,10 +7,12 @@ import { useStore } from "@/lib/store";
 import { openState, type OpenState } from "@/lib/hours";
 import { cx, IconBag, IconCal, IconHome, IconPin, IconStore, IconUser, IconPhone, IconMail } from "@/components/ui/primitives";
 import { CartDrawer } from "./CartDrawer";
+import { ViewModeSwitch } from "./ViewMode";
+import { LoparoSignature } from "./LoparoSignature";
 
 const NAV = [
   { href: "/shop", label: "Shop" },
-  { href: "/services", label: "Range & Services" },
+  { href: "/services", label: "Fitting & Repairs" },
   { href: "/book", label: "Book" },
   { href: "/visit", label: "Visit" },
 ];
@@ -96,10 +98,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const { shopper, cartCount, setCartOpen } = useStore();
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const on = () => setScrolled(window.scrollY > 8);
+    // In phone view the page scrolls inside #frame, so listen to every scroll (capture).
+    const on = () => setScrolled(Math.max(window.scrollY, document.getElementById("frame")?.scrollTop ?? 0) > 8);
     on();
-    window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
+    document.addEventListener("scroll", on, { passive: true, capture: true });
+    return () => document.removeEventListener("scroll", on, { capture: true });
   }, []);
 
   return (
@@ -200,9 +203,13 @@ function Footer() {
           </div>
         </div>
         <div className="border-t border-[var(--line-dark)]">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 text-[12.5px] text-cream/55 sm:px-6">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-4 px-4 py-5 text-[12.5px] text-cream/55 sm:px-6">
             <span>© {year} {s.name}. Prices in CAD.</span>
-            <Link href="/admin" className="hover:text-cream">Staff login</Link>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              <ViewModeSwitch dark />
+              <Link href="/admin" className="hover:text-cream">Staff login</Link>
+              <LoparoSignature />
+            </div>
           </div>
         </div>
       </div>

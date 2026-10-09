@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { mapSettings, stripeConfigured, supabaseService } from "@/lib/data/supabase";
 import { getCustomer } from "@/lib/auth/server";
-import { orderBy } from "@/lib/orders";
+import { alertLowStock, orderBy } from "@/lib/orders";
 import { stripe } from "@/lib/stripe";
 import { emailNewOrder } from "@/lib/notify";
 import { SITE_URL } from "@/lib/site";
@@ -19,6 +19,7 @@ interface Body {
 }
 
 const bad = (error: string, status = 422) => NextResponse.json({ error }, { status });
+
 
 export async function POST(req: Request) {
   let b: Body;
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
     }
   }
 
-  await emailNewOrder(order);
+  await emailNewOrder(order, settings.notifications);
+  await alertLowStock(db, order.items.map((i) => i.productId).filter(Boolean) as string[], settings.notifications);
   return NextResponse.json({ ok: true, token: order.token });
 }

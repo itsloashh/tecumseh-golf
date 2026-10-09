@@ -63,7 +63,7 @@ export function BookView() {
     <div className="mx-auto max-w-3xl px-4 pt-8 sm:px-6 sm:pt-12">
       <p className="label text-green">Book with the pros</p>
       <h1 className="display display-i mt-2 text-[3.2rem] sm:text-[4.4rem]">Request a time</h1>
-      <p className="mt-2 max-w-xl text-[15px] text-muted">Tell us what you need and when works — we'll call or email to lock in a time. Just want to hit balls? No booking needed, come on in.</p>
+      <p className="mt-2 max-w-xl text-[15px] text-muted">Tell us what you need and when works — we'll call or email to lock in a time.</p>
 
       <AnimatePresence mode="wait">
         {done ? (

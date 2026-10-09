@@ -1,15 +1,16 @@
 import { requireAdmin } from "@/lib/admin/session";
 import { getAdminData } from "@/lib/admin/queries";
+import { can } from "@/lib/admin/permissions";
 import { AdminShell } from "@/components/admin/AdminShell";
 
 export const dynamic = "force-dynamic";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
-  const admin = await requireAdmin();
+  const me = await requireAdmin();
   const data = await getAdminData();
   const counts = {
-    orders: data.orders.filter((o) => o.status === "new").length,
-    requests: data.requests.filter((r) => r.status === "new").length,
+    orders: can(me, "orders") ? data.orders.filter((o) => o.status === "new").length : 0,
+    requests: can(me, "bookings") ? data.requests.filter((r) => r.status === "new").length : 0,
   };
-  return <AdminShell email={admin.email} counts={counts} demo={data.demo}>{children}</AdminShell>;
+  return <AdminShell me={me} counts={counts} demo={data.demo}>{children}</AdminShell>;
 }

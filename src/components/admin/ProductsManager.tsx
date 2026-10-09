@@ -11,8 +11,9 @@ import { ConfirmButton, Field, PageHead, Pill, Section, Sheet, TextArea, TextInp
 import { IconMinus, IconPlus, IconSearch, IconX, ProductImage, SampleTag, cx } from "@/components/ui/primitives";
 
 type Filter = "all" | "live" | "hidden" | "low" | "sample";
+export type ProductAccess = { edit: boolean; prices: boolean; stock: boolean };
 
-export function ProductsManager({ products, categories }: { products: AdminProduct[]; categories: Category[] }) {
+export function ProductsManager({ products, categories, access, lowAt }: { products: AdminProduct[]; categories: Category[]; access: ProductAccess; lowAt: number }) {
   const router = useRouter();
   const { run } = useAction();
   const [q, setQ] = useState("");
@@ -31,11 +32,11 @@ export function ProductsManager({ products, categories }: { products: AdminProdu
       if (cat !== "all" && p.category !== cat) return false;
       if (filter === "live" && !p.published) return false;
       if (filter === "hidden" && p.published) return false;
-      if (filter === "low" && !(p.stock != null && p.stock <= 2)) return false;
+      if (filter === "low" && !(p.stock != null && p.stock <= lowAt)) return false;
       if (filter === "sample" && !p.isSample) return false;
       return !n || `${p.name} ${p.brand}`.toLowerCase().includes(n);
     });
-  }, [products, q, filter, cat]);
+  }, [products, q, filter, cat, lowAt]);
 
   const flag = async (p: AdminProduct, f: Parameters<typeof setProductFlags>[1], msg: string) => {
     if (await run(setProductFlags(p.id, f), msg)) router.refresh();
@@ -44,7 +45,8 @@ export function ProductsManager({ products, categories }: { products: AdminProdu
   return (
     <>
       <PageHead kicker="Catalogue" title="Products" sub={`${products.filter((p) => p.published).length} live · ${products.length} total`}
-        action={<button onClick={() => setEditing("new")} className="btn btn-flag"><IconPlus size={18} /> Add product</button>} />
+        action={access.edit ? <button onClick={() => setEditing("new")} className="btn btn-flag"><IconPlus size={18} /> Add product</button> : undefined} />
+      {!access.edit && <p className="mt-4 rounded-xl bg-leaf px-4 py-3 text-[13.5px] text-green">You can update {[access.prices && "prices", access.stock && "stock"].filter(Boolean).join(" and ")} here. Other product details are managed by a manager or shop lead.</p>}
 
       <div className="mt-6 space-y-3">
         <label className="relative block">
@@ -78,25 +80,26 @@ export function ProductsManager({ products, categories }: { products: AdminProdu
                 {p.isSample && <SampleTag />}
               </p>
             </button>
-            {p.stock != null ? (
+            {p.stock != null && access.stock ? (
               <div className="flex items-center rounded-full border-[1.5px] border-[var(--line-strong)]" aria-label="Stock">
                 <button onClick={() => flag(p, { stock: Math.max(0, p.stock! - 1) }, "Stock updated")} className="grid size-9 place-items-center" aria-label="One less"><IconMinus size={15} /></button>
-                <span className={cx("w-7 text-center text-[14px] font-bold tabular", p.stock <= 2 && "text-clay")}>{p.stock}</span>
+                <span className={cx("w-7 text-center text-[14px] font-bold tabular", p.stock! <= lowAt && "text-clay")}>{p.stock}</span>
                 <button onClick={() => flag(p, { stock: p.stock! + 1 }, "Stock updated")} className="grid size-9 place-items-center" aria-label="One more"><IconPlus size={15} /></button>
               </div>
-            ) : <span className="hidden text-[12px] text-faint sm:block">Not tracked</span>}
+            ) : p.stock != null ? <span className={cx("text-[13px] font-semibold", p.stock <= lowAt && "text-clay")}>{p.stock} in stock</span> : <span className="hidden text-[12px] text-faint sm:block">Not tracked</span>}
           </li>
         ))}
         {!list.length && <li className="card p-8 text-center text-[14px] text-muted">No products match.</li>}
       </ul>
 
-      <CategoryManager categories={categories} />
+      {access.edit && <CategoryManager categories={categories} />}
 
       {editing && (
         <ProductEditor
           key={editing === "new" ? "new" : editing.id}
           product={editing === "new" ? null : editing}
           categories={categories}
+          access={access}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); router.refresh(); }}
           onBump={async (id) => { if (await run(bumpProduct(id), "Moved to the front of the shop")) router.refresh(); }}
@@ -106,7 +109,8 @@ export function ProductsManager({ products, categories }: { products: AdminProdu
   );
 }
 
-function ProductEditor({ product, categories, onClose, onSaved, onBump }: { product: AdminProduct | null; categories: Category[]; onClose: () => void; onSaved: () => void; onBump: (id: string) => void }) {
+function ProductEditor({ product, categories, access, onClose, onSaved, onBump }: { product: AdminProduct | null; categories: Category[]; access: ProductAccess; onClose: () => void; onSaved: () => void; onBump: (id: string) => void }) {
+  const lockDetails = !access.edit, lockPrice = !!product && !access.prices, lockStock = !!product && !access.stock;
   const toast = useToast();
   const { run, busy } = useAction();
   const [name, setName] = useState(product?.name ?? "");
@@ -166,12 +170,14 @@ function ProductEditor({ product, categories, onClose, onSaved, onBump }: { prod
     <Sheet open onClose={onClose} title={product ? "Edit product" : "New product"}
       footer={
         <div className="flex items-center gap-2">
-          {product && <ConfirmButton onConfirm={del} busy={busy} />}
-          {product && <button onClick={() => onBump(product.id)} className="btn btn-ghost btn-sm hidden sm:inline-flex">Move to front</button>}
+          {product && access.edit && <ConfirmButton onConfirm={del} busy={busy} />}
+          {product && access.edit && <button onClick={() => onBump(product.id)} className="btn btn-ghost btn-sm hidden sm:inline-flex">Move to front</button>}
           <button onClick={save} disabled={busy || uploading > 0} className="btn btn-green ml-auto">{busy ? "Saving…" : uploading ? "Uploading…" : "Save"}</button>
         </div>
       }>
       <div className="space-y-6">
+        {lockDetails && <p className="rounded-xl bg-leaf px-4 py-3 text-[13.5px] text-green">You can change {[access.prices && "the price", access.stock && "the stock count"].filter(Boolean).join(" and ")}. Everything else is read-only for your account.</p>}
+        <fieldset disabled={lockDetails} className="space-y-6 disabled:opacity-60">
         <div>
           <span className="mb-2 block text-[13.5px] font-semibold">Photos <span className="font-normal text-faint">— first one is the cover</span></span>
           <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
@@ -211,14 +217,16 @@ function ProductEditor({ product, categories, onClose, onSaved, onBump }: { prod
             {(["new", "used"] as const).map((c) => <button key={c} type="button" className="chip !h-11 !rounded-xl" aria-pressed={condition === c} onClick={() => setCondition(c)}>{c === "new" ? "New" : "Pre-owned"}</button>)}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        </fieldset>
+        <fieldset disabled={lockPrice} className="grid grid-cols-2 gap-4 disabled:opacity-60">
           <Field label="Price ($)"><TextInput inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="49.99" /></Field>
           <Field label="Was ($)" hint="optional — shows as sale"><TextInput inputMode="decimal" value={compare} onChange={(e) => setCompare(e.target.value)} placeholder="59.99" /></Field>
-        </div>
-        <div className="space-y-2.5">
+        </fieldset>
+        <fieldset disabled={lockStock} className="space-y-2.5 disabled:opacity-60">
           <Toggle checked={track} onChange={setTrack} label="Track stock" sub="Counts down with each order; sells out at 0" />
           {track && <Field label="In stock"><TextInput inputMode="numeric" value={stock} onChange={(e) => setStock(e.target.value.replace(/[^0-9]/g, ""))} /></Field>}
-        </div>
+        </fieldset>
+        <fieldset disabled={lockDetails} className="space-y-6 disabled:opacity-60">
 
         <div>
           <span className="mb-1.5 block text-[13.5px] font-semibold">Options <span className="font-normal text-faint">— sizes, hand, flex…</span></span>
@@ -239,6 +247,7 @@ function ProductEditor({ product, categories, onClose, onSaved, onBump }: { prod
           <Toggle checked={featured} onChange={setFeatured} label="★ Feature on the homepage" />
           <Toggle checked={published} onChange={setPublished} label="Show in the shop" sub="Turn off to hide without deleting" />
         </div>
+        </fieldset>
       </div>
     </Sheet>
   );

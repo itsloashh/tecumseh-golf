@@ -1,6 +1,17 @@
 @import "tailwindcss";
 @source "../";
 
+/* ── View mode ────────────────────────────────────────────────
+   Breakpoints are redefined so the Auto · Phone · Desktop switch can force the phone layout:
+   with <html data-view="phone"> no sm/md/lg/xl styles apply, whatever the window size.
+   (Desktop mode on a phone works by widening the viewport to 1280px instead.) */
+@custom-variant sm  { @media (width >= 40rem) { :root:not([data-view="phone"]) & { @slot; } } }
+@custom-variant md  { @media (width >= 48rem) { :root:not([data-view="phone"]) & { @slot; } } }
+@custom-variant lg  { @media (width >= 64rem) { :root:not([data-view="phone"]) & { @slot; } } }
+@custom-variant xl  { @media (width >= 80rem) { :root:not([data-view="phone"]) & { @slot; } } }
+@custom-variant 2xl { @media (width >= 96rem) { :root:not([data-view="phone"]) & { @slot; } } }
+@custom-variant max-sm { @media (width < 40rem) { @slot; } :root[data-view="phone"] & { @slot; } }
+
 /* ─────────────────────────────────────────────────────────────
    TECUMSEH GOLF DESIGN SYSTEM
    Clubhouse cream + fairway green (from the mascot), flag yellow for action.
@@ -175,3 +186,71 @@ select.field {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+
+/* ── Phone view on a big screen: the app lives in a phone-width frame ──
+   The frame is its own scroll container and (via transform) the containing block for
+   fixed elements, so the header, tab bar, cart and sheets all stay inside it. */
+@media (width >= 40rem) {
+  :root[data-view="phone"] body {
+    background-color: var(--color-rough);
+    background-image: radial-gradient(circle at 50% 50%, rgb(0 0 0 / 0.22) 0 4px, transparent 5px), radial-gradient(circle at 50% 50%, rgb(0 0 0 / 0.22) 0 4px, transparent 5px);
+    background-size: 22px 22px;
+    background-position: 0 0, 11px 11px;
+  }
+  :root[data-view="phone"] #frame {
+    width: 430px;
+    height: 100dvh;
+    margin: 0 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transform: translateZ(0);
+    background: var(--color-cream);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 30px 90px rgb(0 0 0 / 0.55);
+    scrollbar-width: thin;
+  }
+}
+
+/* ── Logo intro ─────────────────────────────────────────────── */
+#intro {
+  position: fixed; inset: 0; z-index: 200;
+  display: grid; place-items: center;
+  background-color: var(--color-fairway);
+  background-image: radial-gradient(circle at 50% 50%, rgb(0 0 0 / 0.22) 0 4px, transparent 5px), radial-gradient(circle at 50% 50%, rgb(0 0 0 / 0.22) 0 4px, transparent 5px);
+  background-size: 22px 22px;
+  background-position: 0 0, 11px 11px;
+  animation: intro-lift 0.6s cubic-bezier(0.76, 0, 0.24, 1) 1.55s forwards;
+  pointer-events: none;
+}
+.intro-stage { display: flex; flex-direction: column; align-items: center; gap: 22px; animation: intro-stage-out 0.4s ease-in 1.45s forwards; }
+.intro-mark { position: relative; width: 132px; height: 160px; }
+.intro-sun {
+  position: absolute; left: 50%; top: 58%; width: 150px; height: 150px; border-radius: 999px;
+  background: var(--color-flag); translate: -50% -50%; scale: 0;
+  animation: intro-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s forwards;
+}
+.intro-mascot {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  opacity: 0; translate: 0 18px; scale: 0.7;
+  animation: intro-mascot 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.18s forwards;
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.35));
+}
+.intro-ball {
+  position: absolute; bottom: 2px; left: 50%; width: 13px; height: 13px; border-radius: 999px;
+  background: #fff; box-shadow: inset -2px -2px 0 rgb(0 0 0 / 0.12);
+  translate: -220px 0; opacity: 0;
+  animation: intro-roll 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+}
+.intro-word { width: 230px; height: auto; clip-path: inset(0 100% 0 0); animation: intro-wipe 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.6s forwards; }
+.intro-rule { width: 0; height: 4px; border-radius: 4px; background: var(--color-flag); animation: intro-rule 0.45s cubic-bezier(0.65, 0, 0.35, 1) 0.95s forwards; }
+
+@keyframes intro-pop { to { scale: 1; } }
+@keyframes intro-mascot { to { opacity: 1; translate: 0 0; scale: 1; } }
+@keyframes intro-roll { 0% { opacity: 1; } to { opacity: 1; translate: 26px 0; rotate: 540deg; } }
+@keyframes intro-wipe { to { clip-path: inset(0 0 0 0); } }
+@keyframes intro-rule { to { width: 120px; } }
+@keyframes intro-stage-out { to { opacity: 0; translate: 0 -14px; } }
+@keyframes intro-lift { to { transform: translateY(-100%); visibility: hidden; } }
+
+.no-intro #intro { display: none; }
+@media (prefers-reduced-motion: reduce) { #intro { display: none; } }

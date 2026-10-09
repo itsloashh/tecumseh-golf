@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseService } from "@/lib/data/supabase";
+import { mapSettings, supabaseService } from "@/lib/data/supabase";
 import { getCustomer } from "@/lib/auth/server";
 import { emailNewRequest } from "@/lib/notify";
 
@@ -32,6 +32,7 @@ export async function POST(req: Request) {
     console.error("[requests]", error);
     return bad("Couldn't send your request. Please call the shop.", 500);
   }
-  await emailNewRequest({ name, email, phone: b.phone, service: svc.title, when: [date, b.time].filter(Boolean).join(" · ") || "Flexible", details: b.details });
+  const { data: s } = await db.from("store_settings").select("*").eq("id", 1).maybeSingle();
+  await emailNewRequest({ name, email, phone: b.phone, service: svc.title, when: [date, b.time].filter(Boolean).join(" · ") || "Flexible", details: b.details }, mapSettings(s).notifications);
   return NextResponse.json({ ok: true });
 }

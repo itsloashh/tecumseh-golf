@@ -2,6 +2,7 @@ import { getSnapshot } from "@/lib/data";
 import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 import { StoreProvider } from "@/lib/store";
 import { SiteShell } from "@/components/shell/SiteShell";
+import { Intro } from "@/components/shell/Intro";
 
 // Public pages are static and refresh every 5 minutes; admin saves also revalidate instantly.
 export const revalidate = 300;
@@ -27,6 +28,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <StoreProvider snapshot={snapshot}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <Intro />
       <SiteShell>{children}</SiteShell>
     </StoreProvider>
   );

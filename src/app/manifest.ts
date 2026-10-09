@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Tecumseh Golf",
     short_name: "Tecumseh Golf",
-    description: "Pro shop, heated range, fitting & repairs — shop online, pick up in store.",
+    description: "Pro shop, club fitting, lessons & repairs — shop online, pick up in store.",
     start_url: "/",
     display: "standalone",
     background_color: "#f4efe3",

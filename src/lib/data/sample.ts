@@ -7,7 +7,7 @@ import type { Category, Product, Service, Snapshot, StoreSettings } from "../typ
 
 export const settings: StoreSettings = {
   name: "Tecumseh Golf",
-  tagline: "Pro shop · Heated range · Fitting & repairs",
+  tagline: "Pro shop · Club fitting · Lessons · Repairs",
   address: "366 Manning Rd",
   city: "Tecumseh",
   province: "ON",
@@ -28,20 +28,15 @@ export const settings: StoreSettings = {
   hoursConfirmed: false,
   announcement: "Our new website is live — shop online and pick up in store.",
   announcementOn: true,
-  heroTitle: "Your local pro shop & heated range.",
+  heroTitle: "Your local golf pro shop.",
   heroSub:
-    "Clubs, balls, bags and apparel — plus year-round heated bays, custom club fitting and repairs, all under one roof on Manning Rd.",
+    "Clubs, balls, bags, apparel and pre-owned gear — plus custom club fitting, lessons and repairs, all under one roof on Manning Rd.",
   about: [
-    "Tecumseh Golf has been the Windsor–Essex golfer's neighbourhood shop for years: a family-run pro shop, a covered and heated driving range, and staff who actually play the game.",
-    "Come hit a bucket in January, get fitted for your next driver, have a shaft or grip replaced, or just stop in and talk golf. Online orders are held at the counter for pickup.",
+    "Tecumseh Golf is the Windsor–Essex golfer's neighbourhood pro shop: family-run, stocked with the gear you actually play, and staffed by people who know the game.",
+    "Get fitted for your next driver, book a lesson, have a shaft or grip replaced, or just stop in and talk golf. Online orders are held at the counter for pickup.",
   ],
-  rangePrices: [
-    { label: "Small bucket", detail: "Quick warm-up", price: "" },
-    { label: "Medium bucket", detail: "Most popular", price: "" },
-    { label: "Large bucket", detail: "Full session", price: "" },
-    { label: "Heated bay", detail: "Covered, year-round", price: "" },
-  ],
-  rangeNote: "Heated and non-heated tee boxes with marked distance targets.",
+  homeSections: { featured: true, categories: true, workshop: true, preowned: true, visit: true },
+  notifications: { recipients: [], newOrder: true, newBooking: true, lowStock: true, lowStockAt: 2, customerReceipt: true, customerReady: true },
   googleRating: 4.5,
   googleReviews: 161,
   googleUrl: "https://www.google.com/maps/search/?api=1&query=Tecumseh+Golf+Centre+366+Manning+Rd+Tecumseh+ON",
@@ -75,7 +70,7 @@ const raw: P[] = [
   { slug: "lightweight-stand-bag", name: "Lightweight Stand Bag", brand: "Sample Brand", category: "bags", condition: "new", priceCents: 24999, stock: 5, order: 75, featured: true, options: [{ name: "Colour", values: ["Fairway Green", "Black", "White"] }], description: "14-way top, dual straps and a waterproof valuables pocket. Under 2 kg." },
   { slug: "cart-bag", name: "Cart Bag", brand: "Sample Brand", category: "bags", condition: "new", priceCents: 29999, compareAtCents: 34999, stock: 2, order: 70, description: "Full-length dividers, cooler pocket and a cart-strap pass-through." },
   { slug: "cabretta-leather-glove", name: "Cabretta Leather Glove", brand: "Sample Brand", category: "gloves", condition: "new", priceCents: 2499, stock: 40, order: 65, featured: true, options: [{ name: "Hand", values: ["Left (for RH golfer)", "Right (for LH golfer)"] }, { name: "Size", values: ["S", "M", "ML", "L", "XL"] }], description: "Soft, thin premium leather for maximum feel." },
-  { slug: "winter-mitts", name: "Winter Golf Mitts (Pair)", brand: "Sample Brand", category: "gloves", condition: "new", priceCents: 3499, stock: 10, order: 60, description: "Fleece-lined mitts that slip on between shots. Made for heated-bay season." },
+  { slug: "winter-mitts", name: "Winter Golf Mitts (Pair)", brand: "Sample Brand", category: "gloves", condition: "new", priceCents: 3499, stock: 10, order: 60, description: "Fleece-lined mitts that slip on between shots. Made for cold spring and fall rounds." },
   { slug: "tg-logo-polo", name: "Tecumseh Golf Logo Polo", brand: "Tecumseh Golf", category: "apparel", condition: "new", priceCents: 5499, stock: null, order: 55, featured: true, options: [{ name: "Size", values: ["S", "M", "L", "XL", "XXL"] }], description: "Moisture-wicking performance polo with the Tecumseh Golf mascot on the chest." },
   { slug: "tg-rope-cap", name: "Tecumseh Golf Rope Cap", brand: "Tecumseh Golf", category: "apparel", condition: "new", priceCents: 3499, stock: 15, order: 50, description: "Structured cap with a rope front and embroidered logo. One size." },
   { slug: "rangefinder", name: "Laser Rangefinder with Slope", brand: "Sample Brand", category: "accessories", condition: "new", priceCents: 29999, stock: 3, order: 45, description: "6x magnification, flag-lock vibration and a switchable slope mode." },
@@ -96,19 +91,14 @@ export const products: Product[] = raw.map((p, i) => ({
 
 export const services: Service[] = [
   {
-    id: "svc-range", slug: "range", title: "Heated driving range", order: 4, bookable: false, priceLabel: "",
-    summary: "Covered, heated bays so you can keep your swing sharp all winter — plus open-air tees when the weather's nice.",
-    details: ["Heated and non-heated tee boxes", "Marked distance targets", "Grab a bucket at the counter — no booking needed"],
-  },
-  {
     id: "svc-fitting", slug: "fitting", title: "Club fitting", order: 3, bookable: true, priceLabel: "",
-    summary: "Get dialled in on loft, lie, length and shaft before you buy, with launch-monitor data from the simulator.",
-    details: ["Driver, iron, wedge and putter fittings", "Simulator and launch-monitor numbers", "Try before you buy"],
+    summary: "Get dialled in on loft, lie, length and shaft before you buy, so your next clubs actually fit your swing.",
+    details: ["Driver, iron, wedge and putter fittings", "Loft, lie, length & shaft matched to you", "Try before you buy"],
   },
   {
     id: "svc-lessons", slug: "lessons", title: "Golf lessons", order: 2, bookable: true, priceLabel: "",
     summary: "One-on-one coaching for every level — from first swings to shaving strokes off a single-digit handicap.",
-    details: ["Private and series lessons", "Video and simulator feedback", "Juniors welcome"],
+    details: ["Private and series lessons", "Video swing feedback", "Juniors welcome"],
   },
   {
     id: "svc-repairs", slug: "repairs", title: "Repairs & regripping", order: 1, bookable: true, priceLabel: "",

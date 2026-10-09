@@ -6,15 +6,16 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "@/styles/globals.css";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { VIEW_BOOT_SCRIPT } from "@/components/shell/ViewMode";
 
-const TITLE = "Tecumseh Golf — Pro Shop, Heated Range & Club Fitting · Tecumseh, ON";
+const TITLE = "Tecumseh Golf — Pro Shop, Club Fitting & Repairs · Tecumseh, ON";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: TITLE, template: "%s · Tecumseh Golf" },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  keywords: ["Tecumseh Golf", "Tecumseh Golf Centre", "golf shop Windsor", "pro shop Tecumseh", "heated driving range Windsor", "club fitting Windsor Essex", "regripping", "golf lessons Tecumseh"],
+  keywords: ["Tecumseh Golf", "Tecumseh Golf Centre", "golf shop Windsor", "pro shop Tecumseh", "club fitting Windsor Essex", "regripping", "golf lessons Tecumseh"],
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
@@ -35,8 +36,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-CA">
-      <body>{children}</body>
+    <html lang="en-CA" suppressHydrationWarning>
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: VIEW_BOOT_SCRIPT }} />
+        <div id="frame">{children}</div>
+      </body>
     </html>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Order, OrderStatus } from "@/lib/types";
 import { updateOrder } from "@/app/admin/actions";
 import { money } from "@/lib/money";
-import { STATUS_LABEL } from "@/lib/orders";
+import { STATUS_LABEL } from "@/lib/order-status";
 import { ConfirmButton, PageHead, Pill, Sheet, TextArea, ago, useAction, useToast } from "./kit";
 import { IconMail, IconPhone, cx } from "@/components/ui/primitives";
 

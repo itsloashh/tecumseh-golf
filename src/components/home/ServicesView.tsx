@@ -2,12 +2,11 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useStore } from "@/lib/store";
-import { Scorecard } from "./HomeView";
 import { OpenPill } from "@/components/shell/SiteShell";
 import { ProductArt } from "@/components/ui/ProductArt";
 import { IconCal, IconPhone } from "@/components/ui/primitives";
 
-const ART: Record<string, string> = { range: "balls", fitting: "clubs", lessons: "putters", repairs: "gloves" };
+const ART: Record<string, string> = { fitting: "clubs", lessons: "putters", repairs: "gloves" };
 
 export function ServicesView() {
   const { snapshot } = useStore();
@@ -18,9 +17,9 @@ export function ServicesView() {
       <section className="dimples text-cream">
         <div className="stripes">
           <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
-            <p className="label text-flag">Range & services</p>
+            <p className="label text-flag">Fitting · lessons · repairs</p>
             <h1 className="display display-i mt-3 max-w-3xl text-[3.4rem] leading-[0.86] sm:text-[5.2rem]">More than a pro shop.</h1>
-            <p className="mt-5 max-w-xl text-[16.5px] text-cream/80">Hit balls year-round in heated bays, get fitted with real launch data, take a lesson, or drop your clubs off for new grips.</p>
+            <p className="mt-5 max-w-xl text-[16.5px] text-cream/80">Get fitted for your next set, take a lesson, or drop your clubs off for new grips and shafts. Tell us what you need and we'll set a time.</p>
             <div className="mt-6"><span className="rounded-full bg-black/25 px-3 py-1.5"><OpenPill dark /></span></div>
           </div>
         </div>
@@ -50,7 +49,6 @@ export function ServicesView() {
                 {tel && <a href={`tel:${tel}`} className="btn btn-ghost"><IconPhone size={18} /> {s.phone}</a>}
                 {v.priceLabel && <span className="price ml-auto text-[1.3rem]">{v.priceLabel}</span>}
               </div>
-              {v.slug === "range" && <div className="mt-8 max-w-xl"><Scorecard /></div>}
             </div>
           </motion.section>
         ))}
